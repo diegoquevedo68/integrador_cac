@@ -5,6 +5,7 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 import ar.com.codoacodo.entity.Orador;
@@ -19,7 +20,7 @@ public class MySqlOradorRepository implements OradorRepository {
 		Connection con = AdministradorDeConexiones.getConnection();
 
 		// 2 - preparo sql: sql injeciton!
-		String sql = "insert into oradores (nombre, apellido, tema, email, fecha_alta) values (?,?,?,?,?)";
+		String sql = "insert into oradores (nombre, apellido, tema, mail, fecha_alta) values (?,?,?,?,?)";
 
 		try {
 			PreparedStatement statement = con.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
@@ -75,19 +76,80 @@ public class MySqlOradorRepository implements OradorRepository {
 	@Override
 	public void update(Orador orador) {
 		// TODO Auto-generated method stub
+		Connection con = AdministradorDeConexiones.getConnection();
+
+		String sql = "UPDATE oradores SET nombre=?, apellido=?, tema=?, mail=? where id_orador = ?";
+	
+		try {
+			PreparedStatement statement = con.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
+			statement.setString(1, orador.getNombre());
+			statement.setString(2, orador.getApellido());
+			statement.setString(3, orador.getTema());
+			statement.setString(4, orador.getMail());
+			statement.setString(5, orador.getId().toString());
+
+			statement.executeUpdate();// INSERT/UPDATE/DELETE
+
+		} catch (Exception e) {
+			throw new IllegalArgumentException("No se pudo actualizar el orador. ", e);
+		}
 
 	}
 
 	@Override
 	public void delete(Long id) {
 		// TODO Auto-generated method stub
+		Connection con = AdministradorDeConexiones.getConnection();
+
+		String sql = "DELETE from oradores where id_orador = ?";
+
+		try {
+			PreparedStatement statement = con.prepareStatement(sql);
+			statement.setLong(1, id);
+
+			//ResultSet res = statement.executeQuery();// SELECT
+			statement.executeUpdate();
+
+		} catch (Exception e) {
+			throw new IllegalArgumentException("No se pudo eliminar el orador. ", e);
+		}
 
 	}
 
 	@Override
 	public List<Orador> findAll() {
 		// TODO Auto-generated method stub
-		return null;
+		
+		Connection con = AdministradorDeConexiones.getConnection();
+
+		String sql = "select id_orador, nombre, apellido, tema, mail, fecha_alta from oradores";
+		
+		ArrayList<Orador> listado = new ArrayList<Orador>();
+		
+		//Orador orador = null;
+		try {
+			PreparedStatement statement = con.prepareStatement(sql);
+			//statement.setLong(1, id);
+
+			ResultSet res = statement.executeQuery();// SELECT
+
+			while (res.next()) {
+				Long dbId = res.getLong(1);  
+				String nombre = res.getString(2);  
+				String apellido = res.getString(3);  
+				String tema = res.getString(4);  
+				String email = res.getString(5);  
+				Date fechaAlta = res.getDate(6);  
+				
+			Orador orador = new Orador(dbId, nombre, apellido, email, tema, fechaAlta.toLocalDate());//tph: !!!
+			listado.add(orador);
+			}
+			
+		} catch (Exception e) {
+			throw new IllegalArgumentException("No se pudo obtener el listado. ", e);
+		}
+		return listado;
+		//return null;
 	}
 
 }
